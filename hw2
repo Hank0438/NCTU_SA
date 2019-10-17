@@ -49,26 +49,22 @@ while true; do
     1 )
       #result=$(sysctl hw.model hw.machine hw.ncpu)
       result=$(dmesg | grep -i cpu)
-      display_result "System Information"
+      display_result "CPU INFO"
       ;;
     2 )
       #result=$(sysctl hw | egrep 'hw.(phys|user|real)')
       result=$(df -h)
-      display_result "Disk Space"
+      display_result "MEMORY INFO"
       ;;
     3 )
       result=$(ifconfig)
-      display_result "Disk Space"
+      display_result "NET INFO"
       ;;
 
     4 )
-      if [[ $(id -u) -eq 0 ]]; then
-        result=$(du -sh /home/* 2> /dev/null)
-        display_result "Home Space Utilization (All Users)"
-      else
-        result=$(du -sh $HOME 2> /dev/null)
-        display_result "Home Space Utilization ($USER)"
-      fi
+      #result=$(ls -al)	
+      #display_result "FILE BROSWER"
+      dialog --title "Pick one file" --fselect /root/ 7 40
       ;;
   esac
 done

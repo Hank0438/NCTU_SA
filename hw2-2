@@ -47,13 +47,13 @@ while true; do
       echo "Program terminated."
       ;;
     1 )
-      #result=$(sysctl hw.model hw.machine hw.ncpu)
-      result=$(dmesg | grep -i cpu)
+      result=$(sysctl hw.model hw.machine hw.ncpu)
+      #result=$(dmesg | grep -i cpu)
       display_result "CPU INFO"
       ;;
     2 )
-      #result=$(sysctl hw | egrep 'hw.(phys|user|real)')
-      result=$(df -h)
+      result=$(sysctl hw | egrep 'hw.(phys|user|real)')
+      #result=$(df -h)
       display_result "MEMORY INFO"
       ;;
     3 )

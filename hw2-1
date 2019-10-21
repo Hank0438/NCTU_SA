@@ -1,12 +1,9 @@
 #!/bin/sh
 # top 5
 ls -l -AR | grep ^- | awk '{print $5 "\t" $9}' | sort -n -r | head -n 5 | awk '{cnt++; print cnt ": " $1 " " $2}'
-#find ${PWD} -type f -print0 | du --files0-from=- -bc | sort -n -r | head -n 6 | tail -n 5 | awk '{cnt++} {print cnt ": " $1 " " $2}'
 # total directory except ./
 ls -l -AR | grep ^d | wc -l | awk '{print "Dir num: " $1}'
-#find ${PWD} -mindepth 1 -type d | wc -l | awk '{print "Dir num: " $1}'
 # total file num + 1
-#find ${PWD} -type f | wc -l | awk '{print "File num: " $1}'
 ls -l -AR | grep ^- | wc -l | awk '{print "File num: " $1}'
 # total file size
 ls -l -AR | grep ^- | awk '{ total+=$5 }END{ print "Total: " total}'

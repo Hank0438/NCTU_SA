@@ -4,67 +4,82 @@
 
 DIALOG_CANCEL=1
 DIALOG_ESC=255
-HEIGHT=0
-WIDTH=0
 
 display_result() {
-  dialog --title "$1" \
-    --no-collapse \
-    --msgbox "$result" 0 0
+    dialog --title "$1" \
+        --no-collapse \
+        --msgbox "$result" 20 60
+}
+
+file_stat() {
+    
+    size=$(stat -f%z hw2-2)
+    info=$(file hw2-2 | awk '{$(NR--)=""; print}')
+    m=$(awk '{cnt++; if(cnt==1) print $FILE; else if(cnt==2) print $info; else if(cnt==3) print $size;}')
+    dialog --title "FILE STAT"  --msgbox "$m" 30 80
 }
 
 while true; do
-  exec 3>&1
-  selection=$(dialog \
-    --backtitle "System Information" \
-    --title "Menu" \
-    --clear \
-    --cancel-label "Cancel" \
-    --menu "Please select:" $HEIGHT $WIDTH 5 \
-    "1" "CPU INFO" \
-    "2" "MEMORY INFO" \
-    "3" "NET INFO" \
-    "4" "FILE BROWSER"\
-    2>&1 1>&3
-  )
-  exit_status=$?
-  exec 3>&-
-  case $exit_status in
-    $DIALOG_CANCEL)
-      clear
-      echo "Program terminated."
-      exit
-      ;;
-    $DIALOG_ESC)
-      clear
-      echo "Program aborted." >&2
-      exit 1
-      ;;
-  esac
-  case $selection in
-    0 )
-      clear
-      echo "Program terminated."
-      ;;
-    1 )
-      result=$(sysctl hw.model hw.machine hw.ncpu)
-      #result=$(dmesg | grep -i cpu)
-      display_result "CPU INFO"
-      ;;
-    2 )
-      result=$(sysctl hw | egrep 'hw.(phys|user|real)')
-      #result=$(df -h)
-      display_result "MEMORY INFO"
-      ;;
-    3 )
-      result=$(ifconfig)
-      display_result "NET INFO"
-      ;;
-
-    4 )
-      #result=$(ls -al)	
-      #display_result "FILE BROSWER"
-      dialog --title "Pick one file" --fselect /root/ 7 40
-      ;;
-  esac
+    exec 3>&1
+    selection=$(dialog \
+        --backtitle "System Information" \
+        --title "Menu" \
+        --clear \
+        --cancel-label "Cancel" \
+        --menu "Please select:" 20 60 10 \
+        "1" "CPU INFO" \
+        "2" "MEMORY INFO" \
+        "3" "NET INFO" \
+        "4" "FILE BROWSER"\
+        2>&1 1>&3 
+    )
+    exit_status=$?
+    exec 3>&-
+    case $exit_status in
+        $DIALOG_CANCEL)
+            clear
+            echo "Program terminated."
+            exit
+        ;;
+        $DIALOG_ESC)
+            clear
+            echo "Program aborted." >&2
+            exit 1
+        ;;
+    esac
+    case $selection in
+        0 )
+            clear
+            echo "Program terminated."
+        ;;
+        1 )
+            result=$(sysctl hw.model hw.machine hw.ncpu | cut -f2 -d: | awk 'NR==1{print "CPU Info\n\nnCPU Model: " $0}NR==2{print "CPU Machine: " $0}NR==3{print "CPU Core: " $0}')
+            display_result "CPU INFO"
+        ;;
+        2 )
+            result=$(sysctl hw | egrep 'hw.(phy|user)' | cut -f2 -d: | awk '{size[NR]=$1 /1024/1024/1024;}NR==1{print "Memory Info and Usage\n\nTotal: " size[1] " GB"}NR==2{print "Used: " size[2] " GB"}END{print "Free: " size[1]-size[2] " GB"}')
+            display_result "MEMORY INFO"
+        ;;
+        3 )
+            INTERFACE=$(ifconfig | awk '/flag/{gsub(/[:]/,"",$1); inet[$1]=$1}END{k=0; for(j in inet) print j " " inet[j] " " }')
+            CHOOSE=$(dialog --title "NET INFO" --cancel-label "Cancel" --menu "choose" 20 60 10 $INTERFACE --output-fd 1)
+            result=$(ifconfig $CHOOSE | awk -v choose="$CHOOSE" 'BEGIN{print "Interface Name: " choose "\n" }/inet [0-9]+.[0-9]+.[0-9]+.[0-9]+/{print "IPv4__: " $2 "\nNetmask: " $4}/ether/{print "Mac___: " $2}')
+            display_result "NET INFO"
+        ;;
+        4 )
+            #result=$(ls -al) 
+            #display_result "FILE BROSWER"
+            #dialog --title "text" --fselect / 20 60
+            #file=$(dialog --title "Pick one file" --stdout --fselect / 20 60)
+            #file_stat $file
+            
+            #file_browser
+            #name=$(ls)
+            LS=$( ls -l | awk '{a[$9]=$9}END{for(i in a) print i " " a[i] " " }')
+            result=$(dialog --title ${PWD} --menu "file" 20 60 10 $LS --output-fd 1) 
+            #result=$(dialog --stdout --title ${PWD} --fselect ${PWD} 14 48 10 --output-fd 1)
+            display_result "FILE"
+            #file_stat FILE 
+        ;;
+    esac
 done
